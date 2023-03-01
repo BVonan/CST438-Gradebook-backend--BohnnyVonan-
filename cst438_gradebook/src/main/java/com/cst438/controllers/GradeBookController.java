@@ -1,5 +1,4 @@
-package com.cst438.controllers;
-
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -169,5 +169,45 @@ public class GradeBookController {
 		
 		return assignment;
 	}
+	
+	@PostMapping("/gradebook/{course_id}")
+	@Transactional 
+	public Assignment addAssignment(@PathVariable int courseId, java.util.Date dueDate, String name) {
+	    Course course = courseRepository.findById(courseId).orElse(null);
+	    String email = "dwisneski@csumb.edu"; 
+	    if (!course.getInstructor().equals(email)) {
+	        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not correct email");
+	    }
+	    Assignment newAssignment = new Assignment();
+	    newAssignment.setCourse(course);
+	    newAssignment.setDueDate(dueDate);
+	    newAssignment.setName(name);
+	    newAssignment.setNeedsGrading(0);
+	    return assignmentRepository.save(newAssignment);
+	}
+
+//// Change the name of an assignment
+	@PutMapping("/gradebook/{assignment_id}/{new_name}")
+	@Transactional
+	public Assignment updateAssignmentName(@PathVariable int assignment_id, @PathVariable String new_name) {
+	    // check that this request is from the course instructor 
+	    String email = "dwisneski@csumb.edu"; 
+	    Assignment assignment = checkAssignment(assignment_id, email);
+	    // update the assignment name and save it to the database
+	    assignment.setName(new_name);
+	    return assignmentRepository.save(assignment);
+	}
+	
+	@DeleteMapping("/gradebook/{assignment_id}")
+	@Transactional
+	public void deleteAssignment(@PathVariable int assignment_id) {
+	    Assignment assignment = assignmentRepository.findById(assignment_id)
+	        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found."));
+	    if (!(assignment.getNeedsGrading() == 0)) {
+	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete an assignment with grades.");
+	    }
+	    assignmentRepository.delete(assignment);
+	}
+
 
 }
