@@ -33,6 +33,7 @@ import com.cst438.services.RegistrationService;
 @CrossOrigin(origins = {"http://localhost:3000","http://localhost:3001"})
 public class GradeBookController {
 	
+	
 	@Autowired
 	AssignmentRepository assignmentRepository;
 	
@@ -188,6 +189,8 @@ public class GradeBookController {
 	    return assignmentRepository.save(newAssignment);
 	}
 
+	
+	
 //// Change the name of an assignment
 	@PutMapping("/gradebook/{assignment_id}/{new_name}")
 	@Transactional
